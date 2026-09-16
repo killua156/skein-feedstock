@@ -17,6 +17,9 @@ build:
   skip: True  # [win]
   script:
     - python -m pip install --no-deps --ignore-installed {{ name }}-{{ version }}-{{ pkg_loc }}-none-any.whl
+    # skein 0.8.2 imports distutils, removed from the stdlib in Python 3.12.
+    # See the script and jcrist/skein#256 for details.
+    - python {{ RECIPE_DIR }}/patch_distutils.py
     - cp {{ SP_DIR }}/{{ name }}-{{ version }}.dist-info/LICENSE {{ SRC_DIR }}/LICENSE
   entry_points:
     - skein = skein.cli:main
@@ -25,11 +28,14 @@ requirements:
   host:
     - python
     - pip
+    - setuptools
   run:
     - python
     - cryptography
     # 0.8.2 declares `grpcio !=1.45.0,>=1.11.0`; mirrors upstream metadata.
     - grpcio >=1.11.0,!=1.45.0
+    # Needed by the distutils -> packaging.version change applied in build.
+    - packaging
     - protobuf >=3.5.0
     - pyyaml
 
